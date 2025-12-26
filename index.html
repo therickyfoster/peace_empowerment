@@ -1,0 +1,1379 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <!--
+    Zero-Harm + Anti-Inversion Note:
+    This page is designed to empower next-gen governance thinking through consent, transparency, and evidence discipline.
+    Offline storage is local-only and user-resettable. No auto-send features. No secrets captured. No hidden telemetry.
+  -->
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="color-scheme" content="dark light" />
+  <title>Perpetual Governance Lab — Next-Gen Toolkit (Offline-First, Local-Only)</title>
+  <style>
+    /* ==========================================================
+      TOOLTIP: Global Theme + Layout
+      - Purpose: high-contrast, readable UI that prints cleanly
+      - Extend: adjust CSS vars; keep contrast ratios strong
+      - Outcome: accessible, calm, durable interface
+    ========================================================== */
+    :root{
+      --bg0:#070a10;
+      --bg1:#0b1220;
+      --card:#101a2d;
+      --card2:#0d1526;
+      --text:#e8eefc;
+      --muted:#a9b7d6;
+      --line:rgba(255,255,255,.10);
+      --accent:#77b7ff;
+      --good:#7bffb4;
+      --warn:#ffd37b;
+      --bad:#ff7b9e;
+      --shadow: 0 14px 40px rgba(0,0,0,.35);
+      --r: 18px;
+      --r2: 28px;
+      --max: 1200px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      background: radial-gradient(1200px 800px at 30% 0%, rgba(119,183,255,.18), transparent 55%),
+                  radial-gradient(900px 700px at 80% 20%, rgba(123,255,180,.12), transparent 55%),
+                  linear-gradient(180deg, var(--bg0), var(--bg1));
+      overflow-x:hidden;
+    }
+
+    a{ color:var(--accent); text-decoration:none; }
+    a:hover{ text-decoration:underline; }
+    code, pre{ font-family:var(--mono); }
+    .wrap{ max-width:var(--max); margin:0 auto; padding: 18px 18px 120px; }
+
+    /* ==========================================================
+      TOOLTIP: Sticky Nav
+      - Purpose: fast navigation + search + offline status
+      - Extend: add new sections to the nav list in JS config
+      - Outcome: the toolkit remains usable at scale (long-form)
+    ========================================================== */
+    .topbar{
+      position:sticky; top:0; z-index:50;
+      backdrop-filter: blur(14px);
+      background: linear-gradient(180deg, rgba(7,10,16,.88), rgba(7,10,16,.60));
+      border-bottom:1px solid var(--line);
+    }
+    .topbar .row{
+      display:flex; gap:12px; align-items:center; justify-content:space-between;
+      max-width:var(--max); margin:0 auto; padding:10px 18px;
+    }
+    .brand{
+      display:flex; gap:12px; align-items:center; min-width: 280px;
+    }
+    .logo{
+      width:38px; height:38px; border-radius:12px;
+      background: radial-gradient(circle at 30% 30%, rgba(119,183,255,.95), rgba(119,183,255,.15) 55%, rgba(123,255,180,.12));
+      box-shadow: var(--shadow);
+      border:1px solid rgba(255,255,255,.10);
+      display:grid; place-items:center;
+    }
+    .logo span{ font-weight:800; letter-spacing:.5px; }
+    .brand h1{
+      font-size: 14px; line-height:1.1; margin:0;
+    }
+    .brand .sub{
+      margin:2px 0 0; font-size:12px; color:var(--muted);
+    }
+
+    .tools{
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end;
+    }
+
+    .pill{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      border-radius:999px;
+      padding:8px 10px;
+      display:flex; gap:8px; align-items:center;
+      box-shadow: 0 8px 22px rgba(0,0,0,.18);
+    }
+    .pill input[type="search"]{
+      width: 260px; max-width: 40vw;
+      border:0; outline:none; background:transparent; color:var(--text);
+      font-size:13px;
+    }
+    .chip{
+      font-size:12px; color:var(--muted);
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      padding:6px 10px; border-radius:999px;
+      display:flex; gap:8px; align-items:center;
+      user-select:none;
+    }
+    .dot{ width:10px; height:10px; border-radius:999px; background: var(--warn); box-shadow: 0 0 18px rgba(255,211,123,.25); }
+    .dot.ok{ background: var(--good); box-shadow: 0 0 18px rgba(123,255,180,.22); }
+    .dot.bad{ background: var(--bad); box-shadow: 0 0 18px rgba(255,123,158,.22); }
+
+    .btn{
+      cursor:pointer;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      color:var(--text);
+      padding:8px 10px;
+      border-radius: 12px;
+      font-size:12px;
+      display:inline-flex; gap:8px; align-items:center;
+      box-shadow: 0 8px 22px rgba(0,0,0,.18);
+    }
+    .btn:hover{ background: rgba(255,255,255,.07); }
+    .btn:active{ transform: translateY(1px); }
+    .btn.primary{ border-color: rgba(119,183,255,.35); }
+    .btn.good{ border-color: rgba(123,255,180,.35); }
+    .btn.warn{ border-color: rgba(255,211,123,.35); }
+    .btn.bad{ border-color: rgba(255,123,158,.35); }
+
+    /* ==========================================================
+      TOOLTIP: Splash Screen
+      - Purpose: immediate orientation + reduces cognitive load
+      - Extend: edit the intro copy; keep it short + actionable
+      - Outcome: users "enter the lab" instead of "reading a page"
+    ========================================================== */
+    .splash{
+      position:fixed; inset:0; z-index:999;
+      display:grid; place-items:center;
+      background:
+        radial-gradient(1200px 800px at 40% 10%, rgba(119,183,255,.22), transparent 55%),
+        radial-gradient(900px 700px at 80% 25%, rgba(123,255,180,.16), transparent 60%),
+        linear-gradient(180deg, rgba(7,10,16,.96), rgba(7,10,16,.92));
+      transition: opacity .35s ease, transform .35s ease;
+    }
+    .splash.hide{ opacity:0; pointer-events:none; transform: translateY(-8px); }
+    .splashCard{
+      width:min(780px, calc(100vw - 28px));
+      border-radius: var(--r2);
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(16,26,45,.62);
+      box-shadow: var(--shadow);
+      padding: 18px 18px 16px;
+      overflow:hidden;
+      position:relative;
+    }
+    .splashCard:before{
+      content:"";
+      position:absolute; inset:-2px;
+      background: radial-gradient(600px 240px at 20% 0%, rgba(119,183,255,.24), transparent 60%),
+                  radial-gradient(600px 240px at 80% 20%, rgba(123,255,180,.18), transparent 65%);
+      opacity:.9; pointer-events:none;
+    }
+    .splashInner{ position:relative; }
+    .splashTitle{
+      display:flex; align-items:flex-start; justify-content:space-between; gap:14px;
+    }
+    .splashTitle h2{ margin:0; font-size:20px; letter-spacing:.2px; }
+    .splashTitle p{ margin:6px 0 0; color:var(--muted); font-size:13px; line-height:1.4; }
+    .splashGrid{
+      margin-top:14px;
+      display:grid; grid-template-columns: 1.2fr .8fr; gap:12px;
+    }
+    .splashBox{
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(13,21,38,.55);
+      border-radius: var(--r);
+      padding:12px;
+    }
+    .splashBox h3{ margin:0 0 6px; font-size:13px; }
+    .splashBox ul{ margin:0; padding-left:18px; color:var(--muted); font-size:12.5px; line-height:1.5; }
+    .splashActions{
+      margin-top:12px;
+      display:flex; gap:10px; align-items:center; justify-content:flex-end; flex-wrap:wrap;
+    }
+    .kbd{
+      font-family:var(--mono);
+      font-size:12px;
+      padding: 2px 6px;
+      border:1px solid rgba(255,255,255,.14);
+      border-bottom-color: rgba(255,255,255,.22);
+      background: rgba(255,255,255,.05);
+      border-radius: 8px;
+      color: var(--text);
+      display:inline-block;
+      white-space:nowrap;
+    }
+
+    /* ==========================================================
+      TOOLTIP: Section Cards + Parallax
+      - Purpose: long-form content stays scannable
+      - Extend: add new sections by duplicating a .sec block
+      - Outcome: readability + structured learning
+    ========================================================== */
+    .hero{
+      margin: 18px 0 10px;
+      border-radius: var(--r2);
+      border:1px solid rgba(255,255,255,.10);
+      background: linear-gradient(180deg, rgba(16,26,45,.72), rgba(13,21,38,.62));
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      position:relative;
+    }
+    .hero .bg{
+      position:absolute; inset:-40px;
+      background:
+        radial-gradient(800px 260px at var(--mx,50%) var(--my, 10%), rgba(119,183,255,.18), transparent 65%),
+        radial-gradient(700px 260px at calc(var(--mx,50%) + 10%) calc(var(--my, 10%) + 15%), rgba(123,255,180,.10), transparent 60%);
+      transform: translate3d(calc((var(--mx,50%) - 50%) * 0.02), calc((var(--my,10%) - 20%) * 0.03), 0);
+      pointer-events:none;
+      opacity:.95;
+    }
+    .hero .inner{ position:relative; padding: 18px; }
+    .hero h2{ margin:0 0 6px; font-size: 22px; }
+    .hero p{ margin:0; color:var(--muted); line-height:1.5; font-size:13.5px; }
+    .hero .meta{
+      margin-top: 12px;
+      display:flex; gap:10px; flex-wrap:wrap;
+    }
+
+    .grid{
+      margin-top: 12px;
+      display:grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap: 12px;
+      align-items:start;
+    }
+    @media (max-width: 980px){
+      .grid{ grid-template-columns: 1fr; }
+      .brand{ min-width:auto; }
+      .pill input[type="search"]{ width: 190px; }
+    }
+
+    .card{
+      border-radius: var(--r);
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(16,26,45,.60);
+      box-shadow: 0 10px 26px rgba(0,0,0,.22);
+      overflow:hidden;
+    }
+    .card .hd{
+      padding: 12px 12px 10px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+      background: rgba(13,21,38,.38);
+    }
+    .card .hd h3{ margin:0; font-size: 13.5px; letter-spacing:.2px; }
+    .card .hd p{ margin:4px 0 0; color:var(--muted); font-size:12.5px; line-height:1.4; }
+    .card .bd{ padding: 12px; }
+
+    .sec{
+      margin-top: 12px;
+      border-radius: var(--r);
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(16,26,45,.55);
+      box-shadow: 0 10px 26px rgba(0,0,0,.20);
+      overflow:hidden;
+      position:relative;
+    }
+    .sec .wave{
+      position:absolute; inset:-30px; opacity:.8; pointer-events:none;
+      background:
+        radial-gradient(700px 220px at 15% 0%, rgba(119,183,255,.14), transparent 65%),
+        radial-gradient(700px 220px at 85% 20%, rgba(123,255,180,.10), transparent 65%);
+      transform: translate3d(0, calc(var(--py,0px) * 0.03), 0);
+    }
+    .sec .inner{ position:relative; padding: 12px; }
+    .sec h3{ margin:0 0 6px; font-size: 14px; }
+    .sec p{ margin:6px 0; color:var(--muted); line-height:1.55; font-size: 13px; }
+    .sec .cols{
+      display:grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    }
+    @media (max-width: 780px){ .sec .cols{ grid-template-columns:1fr; } }
+
+    details{
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(13,21,38,.50);
+      padding: 10px 10px 8px;
+    }
+    details summary{
+      cursor:pointer;
+      list-style:none;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      user-select:none;
+      font-weight: 650;
+      font-size: 13px;
+    }
+    details summary::-webkit-details-marker{ display:none; }
+    details .d{
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12.7px;
+      line-height: 1.55;
+    }
+    .small{ font-size:12px; color:var(--muted); }
+    .hr{ height:1px; background: rgba(255,255,255,.10); margin: 10px 0; }
+
+    /* ==========================================================
+      TOOLTIP: HUD (Gamification)
+      - Purpose: motivation + streaks + lightweight progress
+      - Extend: add new quests in JS "QUESTS" array
+      - Outcome: sustainable practice, not one-off inspiration
+    ========================================================== */
+    .hud{
+      position: fixed;
+      right: 14px;
+      bottom: 14px;
+      z-index: 80;
+      width: min(360px, calc(100vw - 28px));
+      border-radius: var(--r2);
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(7,10,16,.62);
+      backdrop-filter: blur(14px);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .hud .top{
+      padding: 10px 12px;
+      display:flex; align-items:center; justify-content:space-between; gap:8px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+    }
+    .hud .top .t{
+      display:flex; flex-direction:column;
+      line-height:1.15;
+    }
+    .hud .top .t strong{ font-size: 12.8px; }
+    .hud .top .t span{ font-size: 11.6px; color: var(--muted); }
+    .hud .body{ padding: 10px 12px; }
+    .meter{
+      height: 10px; border-radius: 999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      overflow:hidden;
+    }
+    .meter > i{
+      display:block; height:100%;
+      width: var(--w, 0%);
+      background: linear-gradient(90deg, rgba(119,183,255,.9), rgba(123,255,180,.8));
+    }
+    .hud .row2{
+      margin-top: 8px;
+      display:flex; gap: 8px; flex-wrap:wrap; align-items:center; justify-content:space-between;
+    }
+    .hud .stat{
+      font-size: 12px; color: var(--muted);
+      display:flex; gap:6px; align-items:center;
+    }
+    .hud .stat b{ color: var(--text); }
+    .hud .actions{
+      margin-top: 10px;
+      display:flex; gap: 8px; flex-wrap:wrap;
+    }
+    .hud .actions .btn{ padding: 8px 9px; border-radius: 12px; }
+
+    /* ==========================================================
+      TOOLTIP: Constellation Visualizer
+      - Purpose: tiny "state map" of progress
+      - Extend: nodes are derived from modules in JS config
+      - Outcome: visual progress without external analytics
+    ========================================================== */
+    .viz{
+      width:100%;
+      height: 150px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(13,21,38,.55);
+      overflow:hidden;
+    }
+
+    /* ==========================================================
+      TOOLTIP: Forms + Tables
+      - Purpose: safe inputs + exportable evidence logs
+      - Extend: add new fields, keep sanitize+limits in JS
+      - Outcome: local-only governance lab notebook
+    ========================================================== */
+    textarea, input[type="text"], select{
+      width:100%;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      padding: 10px;
+      outline:none;
+      font-size: 13px;
+    }
+    textarea{ min-height: 96px; resize: vertical; }
+    label{ display:block; font-size: 12px; color: var(--muted); margin: 8px 0 6px; }
+    .rowForm{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media (max-width: 780px){ .rowForm{ grid-template-columns:1fr; } }
+    table{
+      width:100%;
+      border-collapse: collapse;
+      overflow:hidden;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(13,21,38,.45);
+    }
+    th, td{
+      padding: 9px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      font-size: 12.5px;
+      vertical-align: top;
+    }
+    th{ color: var(--muted); text-align:left; font-weight:650; background: rgba(255,255,255,.03); }
+    tr:last-child td{ border-bottom:0; }
+    .tag{
+      display:inline-flex; align-items:center; gap:6px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.03);
+      font-size: 11.5px;
+      color: var(--muted);
+      white-space:nowrap;
+    }
+    .tag.good{ border-color: rgba(123,255,180,.30); }
+    .tag.warn{ border-color: rgba(255,211,123,.30); }
+    .tag.bad{ border-color: rgba(255,123,158,.30); }
+    .muted{ color:var(--muted); }
+
+    /* ==========================================================
+      TOOLTIP: Search Highlight
+      - Purpose: find relevant concepts fast
+      - Extend: tweak highlight style as desired
+      - Outcome: long-form becomes queryable
+    ========================================================== */
+    mark{
+      background: rgba(119,183,255,.20);
+      color: var(--text);
+      border:1px solid rgba(119,183,255,.28);
+      padding: 0 2px;
+      border-radius: 6px;
+    }
+    .hidden{ display:none !important; }
+
+    /* ==========================================================
+      TOOLTIP: Footer + Print
+      - Purpose: printable + shareable + safety note visible
+      - Extend: add license/attributions without external deps
+      - Outcome: sustainability + trust
+    ========================================================== */
+    footer{
+      margin-top: 18px;
+      border-radius: var(--r);
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(16,26,45,.50);
+      padding: 12px;
+      color: var(--muted);
+      font-size: 12.5px;
+      line-height: 1.55;
+    }
+
+    @media print{
+      .topbar, .hud, .splash{ display:none !important; }
+      body{ background:#fff; color:#000; }
+      a{ color:#000; text-decoration:underline; }
+      .card, .sec, details, footer, .hero{ box-shadow:none !important; background:#fff !important; border-color:#ccc !important; }
+      .muted{ color:#333 !important; }
+      mark{ background: #ffeb99 !important; border-color: #d4b100 !important; }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- SPLASH -->
+  <div class="splash" id="splash" aria-hidden="true">
+    <div class="splashCard" role="dialog" aria-label="Welcome">
+      <div class="splashInner">
+        <div class="splashTitle">
+          <div>
+            <h2>Perpetual Governance Lab 🧭</h2>
+            <p>
+              A local-only, offline-capable toolkit to help the next generation translate, stress-test, and preserve
+              governance frameworks <b>without</b> surrendering sovereignty.
+            </p>
+          </div>
+          <div class="chip" title="No network required for core features">
+            <span class="dot ok" id="netDot"></span>
+            <span id="netText">Checking…</span>
+          </div>
+        </div>
+
+        <div class="splashGrid">
+          <div class="splashBox">
+            <h3>What you can do here</h3>
+            <ul>
+              <li>Run a disciplined translation workflow (meaning preserved, not just words).</li>
+              <li>Keep an evidence log + assumptions registry (local-only).</li>
+              <li>Use decision matrices, scenario tests, and bias checks.</li>
+              <li>Track progress with a lightweight HUD (points/streaks) and constellation map.</li>
+            </ul>
+          </div>
+          <div class="splashBox">
+            <h3>Keyboard</h3>
+            <ul>
+              <li><span class="kbd">/</span> focus search</li>
+              <li><span class="kbd">g</span> then <span class="kbd">1..9</span> jump to sections</li>
+              <li><span class="kbd">Ctrl</span> + <span class="kbd">E</span> export your notebook</li>
+              <li><span class="kbd">Ctrl</span> + <span class="kbd">I</span> import a notebook</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="splashActions">
+          <button class="btn primary" id="btnEnter" title="Enter the toolkit">Enter the Lab ✅</button>
+          <button class="btn" id="btnResetAllSplash" title="Wipes all local data for this page">Reset Local Data 🧼</button>
+        </div>
+
+        <p class="small" style="margin:10px 2px 0;">
+          Offline note: content and tools work offline; any external links require a connection. No service worker is used
+          (single-file by design), so the page itself isn’t cached automatically—save this file locally for best offline use.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOP NAV -->
+  <header class="topbar" role="banner">
+    <div class="row">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"><span>✦</span></div>
+        <div>
+          <h1>Perpetual Governance Lab</h1>
+          <div class="sub">Next-Gen Tools • Offline-First • Local-Only • Evidence-Disciplined</div>
+        </div>
+      </div>
+
+      <div class="tools" role="navigation" aria-label="Top tools">
+        <div class="pill" title="Client-side search across all sections (local)">
+          <span class="muted">🔎</span>
+          <input id="search" type="search" placeholder="Search concepts… (press /)" autocomplete="off" />
+          <button class="btn" id="btnClearSearch" title="Clear search">✕</button>
+        </div>
+
+        <div class="chip" title="Connectivity indicator (no data sent)">
+          <span class="dot" id="connDot"></span>
+          <span id="connText">offline?</span>
+        </div>
+
+        <button class="btn" id="btnExport" title="Export your local notebook to a JSON file (Ctrl+E)">Export ⤓</button>
+        <button class="btn" id="btnImport" title="Import a previously exported JSON notebook (Ctrl+I)">Import ⤒</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap" id="app" role="main">
+    <!-- HERO -->
+    <section class="hero" id="sec0" data-title="Home" aria-label="Hero">
+      <div class="bg" aria-hidden="true"></div>
+      <div class="inner">
+        <h2>Empower the Next Gen to Keep This Work “Working” ⚙️</h2>
+        <p>
+          This toolkit is built to help people translate and analyze governance frameworks across cultures and languages,
+          preserve nuance, and make decisions that remain resilient over decades—<b>without merging sovereignty</b>.
+          Everything here is local-only and user-resettable.
+        </p>
+        <div class="meta">
+          <span class="tag good" title="Local state, no telemetry">Local-Only</span>
+          <span class="tag" title="Works without internet for core tools">Offline-Capable</span>
+          <span class="tag warn" title="External links require internet">Links Online</span>
+          <span class="tag" title="Structured, analyzable workflow">Policy-Grade</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="grid">
+      <!-- LEFT COLUMN -->
+      <div>
+        <!-- SECTION: CORE METHOD -->
+        <section class="sec" id="sec1" data-title="Method" aria-label="Method">
+          <div class="wave" aria-hidden="true"></div>
+          <div class="inner">
+            <h3>1) The Core Method: Interpretive Integrity 🧠</h3>
+            <p>
+              The goal isn’t “agreeing.” The goal is making frameworks <b>portable</b> across languages while preserving:
+              legal responsibility, analytical nuance, narrative symmetry, and sovereignty boundaries.
+              This is how you decouple <b>understanding</b> from <b>surrender</b>.
+            </p>
+
+            <div class="sec">
+              <div class="wave" aria-hidden="true"></div>
+              <div class="inner">
+                <div class="cols">
+                  <details open title="TOOLTIP: Workflow overview — Extend by adding new stages in JS STAGES array">
+                    <summary>Workflow Stages (portable across generations) <span class="tag">living protocol</span></summary>
+                    <div class="d">
+                      <ol>
+                        <li><b>Define the frame:</b> what is being proposed, by whom, and for what audience?</li>
+                        <li><b>Declare boundaries:</b> what is non-negotiable vs. negotiable?</li>
+                        <li><b>Translate meaning, not words:</b> preserve intent and constraints.</li>
+                        <li><b>Log assumptions:</b> separate facts, inferences, and hypotheses.</li>
+                        <li><b>Stress-test:</b> hostile reinterpretation, time pressure, adversarial incentives.</li>
+                        <li><b>Publish locally:</b> exportable brief + evidence trail (local-only by default).</li>
+                      </ol>
+                      <p class="small">Tip: Treat “clarity” as a defensive asset. If a framework survives critique across languages, it gains robustness.</p>
+                    </div>
+                  </details>
+
+                  <details title="TOOLTIP: A compact definition to keep teams aligned">
+                    <summary>Definition: “Sovereignty-aware coordination” <span class="tag good">use this</span></summary>
+                    <div class="d">
+                      <p>
+                        A coordination model where states/communities remain sovereign while narratives and analyses are interoperable,
+                        accountability is preserved, and cooperation is optional—not coerced.
+                      </p>
+                      <p class="small">The opposite of “merger by narrative.”</p>
+                    </div>
+                  </details>
+                </div>
+              </div>
+            </div>
+
+            <div class="hr"></div>
+
+            <div class="cols">
+              <details title="TOOLTIP: “Meaning locks” reduce drift across translation">
+                <summary>Meaning Locks (anti-drift anchors) 🔒</summary>
+                <div class="d">
+                  <ul>
+                    <li><b>Legal lock:</b> what actions are asserted as lawful/unlawful?</li>
+                    <li><b>Agency lock:</b> who is doing what to whom (avoid passive-voice laundering)?</li>
+                    <li><b>Time lock:</b> what timeline is assumed (2014 vs 2022 vs post-Cold War)?</li>
+                    <li><b>Scope lock:</b> what is inside/outside the frame?</li>
+                    <li><b>Exit lock:</b> are parties allowed to leave arrangements safely?</li>
+                  </ul>
+                </div>
+              </details>
+
+              <details title="TOOLTIP: A small ritual that prevents propaganda-shaped thinking">
+                <summary>“Three-Bucket” Discipline 🪣</summary>
+                <div class="d">
+                  <p>For every claim, label it explicitly as one of:</p>
+                  <ul>
+                    <li><b>Fact:</b> verifiable with sources.</li>
+                    <li><b>Inference:</b> reasoned from facts (state assumptions).</li>
+                    <li><b>Hypothesis:</b> plausible but unverified (needs testing).</li>
+                  </ul>
+                  <p class="small">This single habit prevents most narrative capture.</p>
+                </div>
+              </details>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION: LAB NOTEBOOK -->
+        <section class="sec" id="sec2" data-title="Notebook" aria-label="Notebook">
+          <div class="wave" aria-hidden="true"></div>
+          <div class="inner">
+            <h3>2) Lab Notebook: Evidence + Assumptions (Local-Only) 🗂️</h3>
+            <p>
+              Use this to log sources, assumptions, and the “shape” of your reasoning. Everything stays on your device (IndexedDB).
+              Export to share voluntarily.
+            </p>
+
+            <div class="card" style="margin-top:10px;" title="TOOLTIP: Evidence log — add rows, export when ready">
+              <div class="hd">
+                <div>
+                  <h3>Evidence Log</h3>
+                  <p>Record sources, what they claim, and your confidence. Avoid long quotes; summarize and cite.</p>
+                </div>
+                <div class="chip"><span class="dot ok"></span><span>local</span></div>
+              </div>
+              <div class="bd">
+                <div class="rowForm">
+                  <div>
+                    <label for="evTitle">Source / Item Title</label>
+                    <input id="evTitle" type="text" maxlength="140" placeholder="e.g., Official statement, dataset, transcript…" />
+                  </div>
+                  <div>
+                    <label for="evType">Type</label>
+                    <select id="evType">
+                      <option>Official</option>
+                      <option>Academic</option>
+                      <option>Journalism</option>
+                      <option>Primary data</option>
+                      <option>Testimony</option>
+                      <option>Other</option>
+                    </select>
+                  </div>
+                </div>
+
+                <label for="evUrl">Link (optional)</label>
+                <input id="evUrl" type="text" maxlength="280" placeholder="https:// (optional; works when online)" />
+
+                <label for="evClaim">Claim Summary (your words)</label>
+                <textarea id="evClaim" maxlength="1200" placeholder="Summarize what the source says. Separate fact vs interpretation."></textarea>
+
+                <div class="rowForm">
+                  <div>
+                    <label for="evConf">Confidence</label>
+                    <select id="evConf">
+                      <option value="High">High</option>
+                      <option value="Medium" selected>Medium</option>
+                      <option value="Low">Low</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label>&nbsp;</label>
+                    <button class="btn good" id="btnAddEvidence" title="Add evidence row (sanitized + rate-limited)">Add Evidence ➕</button>
+                  </div>
+                </div>
+
+                <div class="hr"></div>
+                <table aria-label="Evidence table">
+                  <thead>
+                    <tr>
+                      <th>When</th>
+                      <th>Title</th>
+                      <th>Type</th>
+                      <th>Confidence</th>
+                      <th>Summary</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="evidenceTbody"></tbody>
+                </table>
+                <p class="small" style="margin:8px 0 0;">
+                  Safety: inputs are sanitized, length-limited, and stored locally. No auto-sharing.
+                </p>
+              </div>
+            </div>
+
+            <div class="card" style="margin-top:12px;" title="TOOLTIP: Assumptions registry — helps future readers audit reasoning">
+              <div class="hd">
+                <div>
+                  <h3>Assumptions Registry</h3>
+                  <p>Separate what you know from what you assume. This prevents confident nonsense.</p>
+                </div>
+                <div class="chip"><span class="dot ok"></span><span>local</span></div>
+              </div>
+              <div class="bd">
+                <label for="asText">Assumption / Inference / Hypothesis</label>
+                <textarea id="asText" maxlength="1200" placeholder="Write the assumption. Label it as inference or hypothesis."></textarea>
+
+                <div class="rowForm">
+                  <div>
+                    <label for="asRisk">Risk if wrong</label>
+                    <select id="asRisk">
+                      <option>Low</option>
+                      <option selected>Medium</option>
+                      <option>High</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label>&nbsp;</label>
+                    <button class="btn warn" id="btnAddAssumption" title="Add assumption row (sanitized + rate-limited)">Add Assumption ➕</button>
+                  </div>
+                </div>
+
+                <div class="hr"></div>
+                <table aria-label="Assumptions table">
+                  <thead>
+                    <tr>
+                      <th>When</th>
+                      <th>Statement</th>
+                      <th>Risk</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="assumeTbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION: TRANSLATION PROTOCOL -->
+        <section class="sec" id="sec3" data-title="Translation" aria-label="Translation protocol">
+          <div class="wave" aria-hidden="true"></div>
+          <div class="inner">
+            <h3>3) Translation Protocol (Meaning-Preserving) 🌍</h3>
+            <p>
+              Translation is governance infrastructure. This protocol keeps teams from accidentally smuggling new claims
+              or erasing agency through language.
+            </p>
+
+            <div class="cols">
+              <details open title="TOOLTIP: Repeatable protocol for teams">
+                <summary>Protocol Steps (do this every time)</summary>
+                <div class="d">
+                  <ol>
+                    <li><b>Pin scope:</b> what’s being translated (text, interpretation, or policy proposal)?</li>
+                    <li><b>Declare timeline:</b> which time horizon is assumed?</li>
+                    <li><b>Preserve agency:</b> ensure subjects/verbs remain explicit.</li>
+                    <li><b>Preserve modality:</b> “must/should/may” matters—don’t flatten it.</li>
+                    <li><b>Tag uncertainty:</b> when you infer, mark it as inference.</li>
+                    <li><b>Back-translate test:</b> translate back to the source language and compare meaning, not grammar.</li>
+                    <li><b>Hostile reinterpretation test:</b> rewrite it “as an adversary would,” then harden weak points.</li>
+                  </ol>
+                </div>
+              </details>
+
+              <details title="TOOLTIP: Common failure modes that cause conflict">
+                <summary>Failure Modes (watch for these)</summary>
+                <div class="d">
+                  <ul>
+                    <li><b>Passive voice laundering:</b> “mistakes were made” hides agency.</li>
+                    <li><b>Scope creep:</b> translation adds new claims not present in source.</li>
+                    <li><b>Certainty inflation:</b> “might” becomes “is.”</li>
+                    <li><b>Timeline swap:</b> shifting start date changes “instigator” framing.</li>
+                    <li><b>Moral compression:</b> complex causality becomes a single villain story.</li>
+                  </ul>
+                </div>
+              </details>
+            </div>
+
+            <div class="card" style="margin-top:12px;" title="TOOLTIP: Local translator’s scratchpad — saves drafts to IndexedDB">
+              <div class="hd">
+                <div>
+                  <h3>Scratchpad: Translate + Back-Translate</h3>
+                  <p>Use this as a working bench. Save drafts. Compare meaning.</p>
+                </div>
+                <button class="btn" id="btnSaveScratch" title="Save scratchpad locally">Save 💾</button>
+              </div>
+              <div class="bd">
+                <div class="rowForm">
+                  <div>
+                    <label for="srcText">Source (paste here)</label>
+                    <textarea id="srcText" maxlength="5000" placeholder="Paste source text or your interpretive brief…"></textarea>
+                  </div>
+                  <div>
+                    <label for="dstText">Translation (target language)</label>
+                    <textarea id="dstText" maxlength="5000" placeholder="Write the translation. Preserve agency + modality…"></textarea>
+                  </div>
+                </div>
+                <label for="backText">Back-Translation (quick meaning check)</label>
+                <textarea id="backText" maxlength="5000" placeholder="Translate your translation back into the source language and compare meaning…"></textarea>
+                <div class="rowForm">
+                  <div>
+                    <label for="driftNotes">Drift Notes (what changed?)</label>
+                    <textarea id="driftNotes" maxlength="2000" placeholder="What meaning drift occurred? How will you correct it?"></textarea>
+                  </div>
+                  <div>
+                    <label>&nbsp;</label>
+                    <button class="btn primary" id="btnScoreDraft" title="Score draft for drift risk (local heuristic)">Score Drift Risk 🎯</button>
+                    <p class="small" id="driftScore" style="margin:8px 2px 0;"></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION: DECISION TOOLS -->
+        <section class="sec" id="sec4" data-title="Decision Tools" aria-label="Decision tools">
+          <div class="wave" aria-hidden="true"></div>
+          <div class="inner">
+            <h3>4) Decision Tools: Matrix, Scenarios, Bias Checks 🧰</h3>
+            <p>
+              These are lightweight tools to keep governance decisions robust under pressure, uncertainty, and adversarial incentives.
+            </p>
+
+            <div class="cols">
+              <details open title="TOOLTIP: A professional template to compare policy options">
+                <summary>Decision Matrix (quick, defensible)</summary>
+                <div class="d">
+                  <p><b>How to use:</b> list options, score them against criteria, then write the “why” in one paragraph.</p>
+                  <ul>
+                    <li><b>Criteria:</b> legality, human impact, reversibility, enforceability, escalation risk, time-to-benefit.</li>
+                    <li><b>Rule:</b> any “High risk if wrong” assumption requires a fallback plan.</li>
+                  </ul>
+                </div>
+              </details>
+
+              <details title="TOOLTIP: Prevents “single story” errors by forcing multiple futures">
+                <summary>Scenario Triad (3 futures)</summary>
+                <div class="d">
+                  <ol>
+                    <li><b>Optimistic:</b> cooperation strengthens; misinfo declines; institutions adapt.</li>
+                    <li><b>Baseline:</b> slow improvement; partial compliance; periodic shocks.</li>
+                    <li><b>Adversarial:</b> hostile reinterpretation; coercion; fragmentation.</li>
+                  </ol>
+                  <p class="small">A decision is robust if it doesn’t catastrophically fail in the adversarial scenario.</p>
+                </div>
+              </details>
+            </div>
+
+            <div class="card" style="margin-top:12px;" title="TOOLTIP: Fill-in tool — saved locally">
+              <div class="hd">
+                <div>
+                  <h3>Decision Workbench</h3>
+                  <p>Use this to produce a concise, exportable policy note.</p>
+                </div>
+                <button class="btn" id="btnSaveDecision" title="Save decision note locally">Save 💾</button>
+              </div>
+              <div class="bd">
+                <label for="dq">Decision Question</label>
+                <input id="dq" type="text" maxlength="240" placeholder="What decision is being made?" />
+
+                <div class="rowForm">
+                  <div>
+                    <label for="optA">Option A</label>
+                    <textarea id="optA" maxlength="1600" placeholder="Describe Option A…"></textarea>
+                  </div>
+                  <div>
+                    <label for="optB">Option B</label>
+                    <textarea id="optB" maxlength="1600" placeholder="Describe Option B…"></textarea>
+                  </div>
+                </div>
+
+                <div class="rowForm">
+                  <div>
+                    <label for="criteria">Criteria (comma-separated)</label>
+                    <input id="criteria" type="text" maxlength="240" value="Legality, Human impact, Reversibility, Enforceability, Escalation risk, Time-to-benefit" />
+                  </div>
+                  <div>
+                    <label for="weights">Weights (optional; same count)</label>
+                    <input id="weights" type="text" maxlength="240" placeholder="e.g., 2,3,2,2,3,1" />
+                  </div>
+                </div>
+
+                <div class="rowForm">
+                  <div>
+                    <label for="scoreA">Scores for A (1-5; comma-separated)</label>
+                    <input id="scoreA" type="text" maxlength="240" placeholder="e.g., 4,3,3,2,2,4" />
+                  </div>
+                  <div>
+                    <label for="scoreB">Scores for B (1-5; comma-separated)</label>
+                    <input id="scoreB" type="text" maxlength="240" placeholder="e.g., 3,4,4,3,3,3" />
+                  </div>
+                </div>
+
+                <button class="btn primary" id="btnCalcMatrix" title="Calculate totals (local). Inputs are sanitized.">Calculate Matrix 📊</button>
+                <p class="small" id="matrixOut" style="margin:8px 2px 0;"></p>
+
+                <div class="hr"></div>
+
+                <label for="bias">Bias & Failure Checks (brief)</label>
+                <textarea id="bias" maxlength="1600" placeholder="What could we be missing? What assumptions are fragile? What would an adversary exploit?"></textarea>
+
+                <label for="onePager">One-Pager Summary (exportable)</label>
+                <textarea id="onePager" maxlength="2200" placeholder="Write a 8–12 sentence executive summary. Separate facts from inferences."></textarea>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION: COMMUNITY PROTOCOLS -->
+        <section class="sec" id="sec5" data-title="Protocols" aria-label="Protocols">
+          <div class="wave" aria-hidden="true"></div>
+          <div class="inner">
+            <h3>5) Community Protocols: Disagree Without Collapse 🤝</h3>
+            <p>
+              Next-gen governance needs the ability to host disagreement without becoming brittle. These are low-tech, high-leverage protocols.
+            </p>
+
+            <div class="cols">
+              <details open title="TOOLTIP: A ruleset for discussions that prevents coercion">
+                <summary>Debate Protocol (consent + clarity)</summary>
+                <div class="d">
+                  <ul>
+                    <li><b>No mind-reading:</b> only critique what’s written/spoken.</li>
+                    <li><b>Steelman first:</b> restate the other side accurately before disagreeing.</li>
+                    <li><b>One claim per sentence:</b> prevents “narrative fog.”</li>
+                    <li><b>Evidence tags:</b> Fact / Inference / Hypothesis.</li>
+                    <li><b>Exit respected:</b> anyone can pause without penalty.</li>
+                  </ul>
+                </div>
+              </details>
+
+              <details title="TOOLTIP: Helps resist manipulation without paranoia">
+                <summary>Misinformation Hygiene (low drama)</summary>
+                <div class="d">
+                  <ul>
+                    <li><b>Check incentives:</b> who benefits if you believe this?</li>
+                    <li><b>Check provenance:</b> where did it originate?</li>
+                    <li><b>Check time:</b> is it outdated or context-swapped?</li>
+                    <li><b>Check specificity:</b> vague claims are easier to weaponize.</li>
+                    <li><b>Refuse false binaries:</b> “both” or “neither” may be true.</li>
+                  </ul>
+                </div>
+              </details>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION: RESOURCES -->
+        <section class="sec" id="sec6" data-title="Resources" aria-label="Resources">
+          <div class="wave" aria-hidden="true"></div>
+          <div class="inner">
+            <h3>6) Resources (Online When Available) 📚</h3>
+            <p>
+              These are stable, broadly useful references. Links open in a new tab. No tracking. No auto-fetch.
+            </p>
+
+            <div class="card" title="TOOLTIP: Curated links — keep stable, avoid dead links">
+              <div class="hd">
+                <div>
+                  <h3>Reference Shelf</h3>
+                  <p>Law, governance, critical thinking, and negotiation basics.</p>
+                </div>
+                <div class="chip"><span class="dot warn"></span><span>online links</span></div>
+              </div>
+              <div class="bd">
+                <ul class="small" style="line-height:1.75; margin:0; padding-left:18px;">
+                  <li><a href="https://www.un.org/en/about-us/un-charter" target="_blank" rel="noopener">UN Charter (official)</a></li>
+                  <li><a href="https://www.icrc.org/en/war-and-law/treaties-customary-law/geneva-conventions" target="_blank" rel="noopener">Geneva Conventions overview (ICRC)</a></li>
+                  <li><a href="https://www.un.org/securitycouncil/" target="_blank" rel="noopener">UN Security Council (official portal)</a></li>
+                  <li><a href="https://plato.stanford.edu/" target="_blank" rel="noopener">Stanford Encyclopedia of Philosophy (critical concepts)</a></li>
+                  <li><a href="https://ourworldindata.org/" target="_blank" rel="noopener">Our World in Data (data literacy practice)</a></li>
+                  <li><a href="https://github.com/" target="_blank" rel="noopener">GitHub (open collaboration patterns)</a></li>
+                </ul>
+                <p class="small" style="margin:10px 0 0;">
+                  Offline alternative: export notes and store sources/titles locally in the Evidence Log.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION: ATtributions -->
+        <section class="sec" id="sec7" data-title="Attributions" aria-label="Attributions">
+          <div class="wave" aria-hidden="true"></div>
+          <div class="inner">
+            <h3>7) Attributions & Licensing 🧾</h3>
+            <p>
+              This single-file app is original code. It adapts general open patterns:
+              collapsible sections (<code>&lt;details&gt;</code>), “README-like” modular structure, and local-only export/import workflows
+              commonly used in open-source communities (e.g., GitHub).
+            </p>
+
+            <details title="TOOLTIP: Keep attributions human-readable and honest">
+              <summary>Human-readable summary</summary>
+              <div class="d">
+                <ul>
+                  <li><b>Inspiration:</b> GitHub documentation conventions (headings, checklists, modular sections).</li>
+                  <li><b>No copied proprietary code:</b> all logic written from scratch for this page.</li>
+                  <li><b>License suggestion:</b> consider MIT for broad reuse, or CC BY for content—choose what fits your mission.</li>
+                </ul>
+                <p class="small">If you fork this for a public repo, add a LICENSE file and a short CONTRIBUTING guide.</p>
+              </div>
+            </details>
+          </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer aria-label="Footer">
+          <b>Zero-Harm & Anti-Inversion Note:</b>
+          This toolkit is designed to strengthen sovereignty through consent, transparency, and evidence discipline.
+          It avoids coercive framing, hidden telemetry, manipulative UX, or auto-sending data anywhere.
+          All storage is local-only and user-resettable. If something could be repurposed for harm, blunt it, gate it, or remove it.
+          <div class="hr"></div>
+          <span class="small">Tip: Save this file locally for best offline use. Export your notebook regularly.</span>
+        </footer>
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <aside>
+        <!-- NAV CARD -->
+        <div class="card" id="navCard" title="TOOLTIP: Section navigator — jump quickly through long content">
+          <div class="hd">
+            <div>
+              <h3>Navigator</h3>
+              <p>Jump to modules. Mark completion for constellation progress.</p>
+            </div>
+            <button class="btn" id="btnCollapseAll" title="Collapse all details to reduce scrolling">Collapse ✂️</button>
+          </div>
+          <div class="bd">
+            <div id="navList"></div>
+            <div class="hr"></div>
+            <label class="small">Constellation (module completion map)</label>
+            <canvas class="viz" id="viz" width="640" height="240" aria-label="Constellation visualizer"></canvas>
+            <div class="hr"></div>
+            <div class="rowForm">
+              <button class="btn good" id="btnCompleteSelected" title="Mark selected module complete (adds points)">Complete ✅</button>
+              <button class="btn" id="btnUncompleteSelected" title="Unmark selected module">Undo ↩</button>
+            </div>
+            <p class="small" style="margin:8px 2px 0;">
+              Local-only: completion data stays on your device.
+            </p>
+          </div>
+        </div>
+
+        <!-- SETTINGS -->
+        <div class="card" style="margin-top:12px;" title="TOOLTIP: Local preferences + optional local analytics counters">
+          <div class="hd">
+            <div>
+              <h3>Settings</h3>
+              <p>Preferences are stored locally (IndexedDB). No hidden tracking.</p>
+            </div>
+            <div class="chip"><span class="dot ok"></span><span>local</span></div>
+          </div>
+          <div class="bd">
+            <label for="name">Callsign / Name (optional)</label>
+            <input id="name" type="text" maxlength="40" placeholder="e.g., Foster+Navi / Analyst / Team-7" />
+
+            <label for="telemetry">Local counters (optional)</label>
+            <select id="telemetry" title="TOOLTIP: Local-only counters track clicks/actions on this device only">
+              <option value="off" selected>Off (recommended)</option>
+              <option value="on">On (local-only)</option>
+            </select>
+
+            <div class="hr"></div>
+            <button class="btn bad" id="btnResetAll" title="Erase all local data for this page">Reset Local Data 🧼</button>
+            <p class="small" style="margin:8px 2px 0;">
+              Reset deletes: notebook entries, HUD progress, settings, scratchpad drafts.
+            </p>
+          </div>
+        </div>
+
+        <!-- QUICKSTART -->
+        <div class="card" style="margin-top:12px;" title="TOOLTIP: A minimal on-ramp for new teams">
+          <div class="hd">
+            <div>
+              <h3>Quickstart (15 minutes)</h3>
+              <p>Do this with a friend. Then export and share.</p>
+            </div>
+          </div>
+          <div class="bd">
+            <ol class="small" style="line-height:1.75; margin:0; padding-left:18px;">
+              <li>Pick a framework to analyze (or a claim people argue about).</li>
+              <li>Write a 10-sentence interpretation in “One-Pager Summary.”</li>
+              <li>Add 3 evidence items + 3 assumptions.</li>
+              <li>Translate your interpretation into another language.</li>
+              <li>Back-translate; log drift; harden weak spots.</li>
+              <li>Run the Scenario Triad and update the one-pager.</li>
+              <li>Export your notebook and share it intentionally.</li>
+            </ol>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <!-- HUD -->
+  <div class="hud" id="hud" aria-label="Gamification HUD">
+    <div class="top">
+      <div class="t">
+        <strong id="hudTitle">Analyst HUD</strong>
+        <span id="hudSub">Progress is local-only • make it “working”</span>
+      </div>
+      <button class="btn" id="btnHudToggle" title="Minimize / expand HUD">▾</button>
+    </div>
+    <div class="body" id="hudBody">
+      <div class="meter" aria-label="Level progress"><i id="lvlBar" style="--w:0%"></i></div>
+      <div class="row2">
+        <div class="stat" title="Points earned locally"><span>✨</span><b id="pts">0</b><span>pts</span></div>
+        <div class="stat" title="Daily streak (local)"><span>🔥</span><b id="streak">0</b><span>days</span></div>
+        <div class="stat" title="Level (local)"><span>🧭</span><b id="lvl">1</b><span>lvl</span></div>
+      </div>
+
+      <div class="actions">
+        <button class="btn good" id="btnDailyQuest" title="Complete a small daily quest (+pts)">Daily Quest ✅</button>
+        <button class="btn" id="btnAddPoint" title="Micro-progress (+1)">+1</button>
+        <button class="btn" id="btnReflect" title="Open notebook section">Reflect 📝</button>
+      </div>
+
+      <div class="hr"></div>
+      <div class="small" id="questText">Quest: Add one evidence item and one assumption.</div>
+    </div>
+  </div>
+
+  <noscript>
+    <div style="max-width:900px;margin:18px auto;padding:12px;border:1px solid #ccc;border-radius:12px;background:#fff;color:#000;">
+      <b>JavaScript is disabled.</b> This page needs JavaScript for offline storage (IndexedDB), search, and the notebook tools.
+      You can still read the content and use the collapsible sections, but saving/exporting will not work.
+    </div>
+  </noscript>
+
+  <input id="fileImport" type="file" accept="application/json" class="hidden" />
+
+  <script>
+    /* ==========================================================
+      TOOLTIP: Safety + Sanitization + Rate limiting
+      - Purpose: prevent injection, runaway inputs, spam-clicking
+      - Extend: adjust limits; keep it gentle, not hostile
+      - Outcome: safe-by-default local notebook
+    ========================================================== */
+    const LIMITS = {
+      clickMs: 450,          // gentle rate-limit for write actions
+      maxRows: 250,          // notebook cap (per table)
+      maxExportBytes: 1_500_000 // ~1.5MB safety limit
+    };
+
+    const state = {
+      db: null,
+      selectedModuleId: "sec1",
+      searchQuery: "",
+      telemetry: "off",
+      counters: { clicks: 0, adds: 0, exports: 0 },
+      hud: { pts: 0, streak: 0, lvl: 1, lastDay: "", minimized: false, questIdx: 0 },
+      modules: {}, // id -> {done:boolean}
+      notebook: { evidence: [], assumptions: [] },
+      scratch: { src:"", dst:"", back:"", drift:"" },
+      decision: { dq:"", optA:"", optB:"", criteria:"", weights:"", scoreA:"", scoreB:"", bias:"", onePager:"" },
+      prefs: { name:"", telemetry:"off" }
+    };
+
+    function nowISO(){ return new Date().toISOString(); }
+    function todayKey(){
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,"0");
+      const da = String(d.getDate()).padStart(2,"0");
+      return `${y}-${m}-${da}`;
+    }
+
+    // Basic HTML escape to prevent injection in rendered tables
+    function esc(s){
+      s = String(s ?? "");
+      return s.replace(/[&<>"']/g, ch => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+      }[ch]));
+    }
+
+    // URL sanity check (optional, no fetch)
+    function safeUrl(u){
+      u = String(u ?? "").trim();
+      if(!u) return "";
+      if(u.length > 280) return "";
+      try{
+        const x = new URL(u);
+        if(x.protocol !== "http:" && x.protocol !== "https:") return "";
+        return x.toString();
+      }catch(e){
+        return "";
+      }
+    }
+
+    function clampText(s, max){
+      s = String(s ?? "");
+      if(s.length > max) s = s.slice(0, max);
+      return s;
+    }
+
+    let lastWriteAt = 0;
+    function allowWrite(){
+      const t = Date.now();
+      if(t - lastWriteAt < LIMITS.clickMs) return false;
+      lastWriteAt = t;
+      return true;
+    }
+
+    /* ==========================================================
+      TOOLTIP: IndexedDB Wrapper
+      - Purpose: offline local persistence in a single-file app
+      - Extend: add new stores in onupgradeneeded
+      - Outcome: durable state without external services
+    ========================================================== */
+    const DB_NAME = "perpetual_governance_lab_v1";
+    const DB_VER = 1;
+
+    function idbOpen(){
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, DB_VER);
+        req.onupgradeneeded = () => {
+          const db = req.result;
+          if(!db.objectStoreNames.contains("kv")) db.createObjectStore("kv");
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+    function idbGet(key){
+      return new Promise((resolve, reject) => {
+        const tx = state.db.transaction("kv","readonly");
+        const st = tx.objectStore("kv");
+        const req = st.get(key);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+    function idbSet(key, val){
+      return new Promise((resolve, reject) => {
+        const tx = state.db.transaction("kv","readwrite");
+        const st = tx.objectStore("kv");
+        const req = st.put(val, key);
+        req.onsuccess = () => resolve(true);
+        req.onerror = () => reject(req.error);
+      });
+    }
+    function idbClear(){
+      return new Promise((resolve, reject) => {
+        const tx = state.db.transaction("kv","readwrite");
+        const st = tx.objectStore("kv");
+        const req = st.clear();
+        req.onsuccess = () => resolve(true);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function saveAll(){
+      await idbSet("state", {
+        telemetry: state.telemetry,
+        counters: state.counters,
+        hud: state.hud,
+        modules: state.modules,
+        notebook: state.notebook,
+        scratch: state.scratch,
+        decision: state.decision,
+        prefs: state.prefs
+      });
+    }
+
+    async function loadAll(){
+      const s = await idbGet("state");
+      if(!s) return;
+      // Merge defensively (no surprises)
+      if(typeof s.telemetry === "string") state.telemetry = s.telemetry;
+      if(s.counters && typeof s.counters === "object") state.counters = { ...state.counters, ...s.counters };
+      if(s.hud && typeof s.hud === "object") state.hud = { ...state.hud, ...s.hud };
+      if(s.modules && typeof s.modules === "object") state.modules = { ...state.modules, ...s.modules };
+      if(s.notebook && typeof s.notebook === "object") state.notebook = {
+        evidence: Array.isArray(s.notebook.evidence) ? s.notebook.evidence : [],
+        assumptions: Array.isArray(s.notebook.assumptions) ? s.notebook.assumptions : []
+      };
+      if(s.scratch && typeof s.scratch === "object") state.scratch = { ...state.scratch, ...s.scratch };
+      if(s.decision && typeof s.decision === "object") state.decision = { ...state.decision, ...s.decision };
+      if(s.prefs && typeof s.prefs === "object") state.prefs = { ...state.prefs, ...s.prefs };
+      state.telemetry = state.prefs.telemetry || state.telemetry;
+    }
+
+    /* ==========================================================
+      TOOLTIP: Modules Config
+      - Purpose: single source of truth for nav + constellation nodes
+      - Extend: add new sections by adding an item
+      - Outcome: scalable structure for long-form toolkits
+    ========================================================== */
+    const MODULES = [
+      { id:"sec0", key:"0", title:"Home", emoji:"🏠" },
+      { id:"sec1", key:"1", title:"Method", emoji:"🧠" },
+      { id:"sec2", key:"2", title:"Notebook", emoji:"🗂️" },
+      { id:"sec3", key:"3", title:"Translation", emoji:"🌍" },
+      { id:"sec4", key:"4", title:"Decision Tools", emoji:"🧰" },
+      { id:"sec5", key:"5", title:"Protocols", emoji:"🤝" },
+      { id:"sec6", key:"6", title:"Resources", emoji:"📚" },
+      { id:"sec7", key:"7", title:"Attributions", emoji:"🧾" }
+    ];
+
+    const QUESTS = [
+      "Add one evidence item and one assumption.",
+      "Translate a paragraph and run back-translation.",
+      "Write a one-pager summary with Fact/Inference/Hypothesis tags.",
+      "Run a Scenario Triad: optimistic / baseline / adversarial.",
+      "Do a hostile reinterpretation test on your draft.",
+      "Refine one Meaning Lock (agency/modality/time/scope/exit)."
+    ];
+
+    /* ==========================================================
+      TOOLTIP: UI Helpers
+      - Purpose: keep UI updates centralized and deterministic
+      - Extend: add render functions for new stores
+      - Outcome: no console errors, stable rendering
+    ========================================================== */
+    const $ = (sel, root=document) => root.querySelector(sel);
+
+    function setConn(){
+      const online = navigator.onLine;
+      const dot = $("#connDot");
+      const txt = $("#connText");
+      const netDot = $("#netDot");
+      const netText = $("#netText");
+      if(dot){
+        dot.classList.toggle("
